@@ -38,6 +38,12 @@ jobs:
           API_BASE_URL: ${{ vars.API_BASE_URL }}
           API_KEY: ${{ secrets.CLAIM_API_KEY }}
 
+      - name: Write job summary
+        if: always()
+        run: node scripts/write-ci-summary.mjs
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -47,6 +47,8 @@ claim-service-api/
 │       ├── claims/                       # per-endpoint tests (create-claim.spec.ts, ...)
 │       ├── contract/                     # cross-cutting checks: undocumented/edge behaviour, not tied to one endpoint
 │       └── errors/                       # cross-cutting HTTP-framing errors: malformed JSON, Content-Type
+├── scripts/
+│   └── write-ci-summary.mjs          # turns the json reporter's output into the CI job summary
 ├── eslint.config.mjs                 # ESLint (typescript-eslint + eslint-plugin-playwright)
 ├── .prettierrc.json                  # Prettier formatting rules
 ├── playwright.config.ts
@@ -94,6 +96,8 @@ npm run format:check    # Prettier — npm run format to apply
 All three run in CI on every push and must pass clean.
 
 **CI setup.** `.github/workflows/api-tests.yml` runs on every push to `main`, every pull request into `main`, daily on a schedule, and on manual dispatch. It needs two things set in the repo (Settings → Secrets and variables → Actions): a repository **variable** named `API_BASE_URL` (same value as your local `.env`) and a repository **secret** named `CLAIM_API_KEY` (kept as a secret, not a variable, since it's sensitive). Without these, the workflow fails at the "Run API tests" step with the same missing-env-var error `config/env.ts` throws locally.
+
+**Job summary, no artifact download needed.** The full HTML report is still uploaded as an artifact for deep-diving a failure, but a pass/fail/known-bug breakdown is also written straight to the GitHub Actions run's job summary (`scripts/write-ci-summary.mjs`, reading the `json` reporter's `playwright-report/results.json`) — so a reviewer sees the state of the suite on the Actions run page itself, without downloading anything.
 
 **Run in Docker.** `Dockerfile` builds on [Playwright's official image](https://mcr.microsoft.com/en-us/product/playwright/about), matching the `@playwright/test` version in `package.json`, so the suite runs the same way no matter what's installed locally. Credentials still come from the environment, not the image:
 

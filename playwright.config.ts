@@ -13,7 +13,12 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
-  reporter: [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]],
+  // 'json' feeds scripts/write-ci-summary.mjs, which turns it into the GitHub Actions job summary.
+  reporter: [
+    ['list'],
+    ['html', { outputFolder: 'playwright-report', open: 'never' }],
+    ['json', { outputFile: 'playwright-report/results.json' }],
+  ],
   use: {
     baseURL,
     extraHTTPHeaders: {
