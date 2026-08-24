@@ -49,6 +49,6 @@ Nothing the test suite can act on directly — there's no `.proto` file or gRPC 
 
 ## Assumptions
 
-- Started from the Swagger spec, but treated it as a starting point, not ground truth — every assertion in the suite was confirmed against the live API first (see README § Adding New Tests).
+- Started from the Swagger spec, but treated it as a starting point, not ground truth — every assertion in the suite was confirmed against the live API first (see [CONTRIBUTING.md](../CONTRIBUTING.md)).
 - `pageSize`, `pageToken`, and `statusFilter` are assumed to be the only list-filtering parameters — none others are documented.
-- No documented rate-limit policy; a light non-destructive probe showed no throttling, but this wasn't pushed further since the test API key is shared with other users of the environment (see README § Deliberately Out of Scope).
+- No documented rate-limit policy; a light non-destructive probe showed no throttling, but this wasn't pushed further since the test API key is shared with other users of the environment (see [README.md § Decisions & Trade-offs](../README.md#decisions--trade-offs)).
