@@ -4,24 +4,19 @@ Automated test suite written with Playwright + TypeScript for the Claim Service 
 
 All 5 `/v1/claims` endpoints (create/get/list/update/delete) have dedicated integration coverage, plus auth, malformed-request, idempotency, and concurrent-access checks, plus two e2e flows (one successful, one rejected) — 44 tests total. 9 real bugs and 6 design observations found so far — see "Bugs Found" and "Design Observations" below.
 
-Every assertion is grounded in the live API's actual behavior, confirmed by direct probing before being written rather than assumed from the Swagger spec; that discipline is captured as a reusable Claude Code skill, `/write-claim-test` (`.claude/skills/write-claim-test/SKILL.md`) — see "Adding New Tests" below.
+Every assertion is grounded in the live API's actual behavior, confirmed by direct probing before being written rather than assumed from the Swagger spec — see "Adding New Tests" below for how to extend the suite the same way.
 
-## Backend Architecture (Inferred)
-
-The API is documented as a plain REST/JSON service, but response headers and error message formats reveal it's actually a **gRPC service exposed through a REST gateway** (the [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway) pattern, common in Go microservices) — none of this is stated in the Swagger spec, it was inferred from evidence while investigating other findings:
-
-- Every successful response carries a `grpc-metadata-content-type: application/grpc` header — an artifact of the underlying gRPC response being forwarded through the gateway.
-- Malformed-input error messages come back in gRPC's own wire-format vocabulary, e.g. `"proto: (line 1:10): invalid value for string type: 12"` and `"parsing field \"page_size\": strconv.ParseInt: ..."` — not typical REST/JSON-schema-validator phrasing.
-- The `code` field in every `RpcStatus` error response (`3`, `5`, ...) is a [gRPC status code](https://grpc.io/docs/guides/status-codes/) (`INVALID_ARGUMENT`, `NOT_FOUND`), reused as-is rather than mapped to a REST-idiomatic error vocabulary.
-
-Nothing the test suite can act on directly — there's no `.proto` file or gRPC endpoint exposed to us, only the REST gateway — but it explains otherwise-odd behavior (e.g. why validation messages read like protobuf unmarshalling errors rather than field-level REST validation messages) and is worth knowing before extending this suite or introducing a second service's client.
+- **API structure, endpoints, and assumptions:** [docs/API_UNDERSTANDING.md](docs/API_UNDERSTANDING.md)
+- **Full enumerated test case list:** [docs/TEST_CASES.md](docs/TEST_CASES.md)
 
 ## Project Structure
 
 ```
 claim-service-api/
 ├── .github/workflows/api-tests.yml   # CI workflow (push/manual/daily)
-├── .claude/skills/write-claim-test/  # /write-claim-test — Claude Code skill for adding a new test
+├── docs/
+│   ├── API_UNDERSTANDING.md          # API structure, endpoints, assumptions
+│   └── TEST_CASES.md                 # enumerated list of all 44 test cases
 ├── config/
 │   └── env.ts                        # reads base URL + API key from .env
 ├── api/
@@ -122,7 +117,7 @@ Things the live API does that aren't wrong per the documentation, but are worth 
 - **No content-format validation on `title`/`description`/`claimantId`.** Non-alphabetic values like `"..."` or `"###$$$!!!"` are accepted with `200` for any of the three fields — no character-class or format rule is documented or enforced beyond "non-empty string". Worth flagging to the API owners: is any of these three fields expected to follow a particular format (e.g. `claimantId` matching an internal id pattern)? (`tests/integration/claims/create-claim.spec.ts`)
 - **`Content-Type` isn't enforced.** A `POST /v1/claims` with a valid JSON body but a `text/plain` (or missing) `Content-Type` header still succeeds with `200`, instead of being rejected with `415`. (`tests/integration/errors/common.spec.ts`)
 - **`pageToken` isn't validated.** Passing an arbitrary, never-issued string as `pageToken` is silently accepted and just returns the first page, rather than being rejected. Somewhat moot today since `nextPageToken` never comes back populated (bug 7), so there's no way to obtain a _real_ token to test the correct flow either way. (`tests/integration/claims/list-claims.spec.ts`)
-- **No idempotency support.** Sending the exact same payload to `POST /v1/claims` twice creates two separate claims with two separate ids; no `Idempotency-Key`-style header is supported or documented. For a claims system specifically, the real risk is a network timeout causing a client retry that results in the same claim being submitted twice. (`tests/integration/contract/idempotency.spec.ts`)
+- **No idempotency support.** Sending the exact same payload to `POST /v1/claims` twice creates two separate claims with two separate ids; no `Idempotency-Key`-style header is supported or documented. Worth flagging given retry-on-timeout is a common client pattern. (`tests/integration/contract/idempotency.spec.ts`)
 
 ## Deliberately Out of Scope
 
@@ -130,13 +125,12 @@ Things the live API does that aren't wrong per the documentation, but are worth 
 
 ## Adding New Tests
 
-If you're using Claude Code, run `/write-claim-test` — it's a project skill (`.claude/skills/write-claim-test/SKILL.md`) that walks through this whole process: which folder a test belongs in, reusing the existing client/types/factory/fixture, probing the real API before asserting anything, and classifying any bug found as a real defect vs. a design observation. You can pass what you want directly, e.g.:
-
-```
-/write-claim-test add boundary-value tests for pageSize on GET /v1/claims
-/write-claim-test cover PATCH with a claimantId that isn't a valid ObjectId
-```
+Before writing anything, check what already exists: a resource client under `api/clients/` (extending `BaseApiClient`), request/response types under `api/types/`, a test-data factory under `utils/testData/`, and a client fixture in `fixtures.ts` — reuse or extend these rather than duplicating them. Confirm the real behavior first: probe the live endpoint directly (e.g. `curl` with the `Authorization: Bearer <API_KEY>` header) for the happy path and the edge cases you plan to cover, rather than assuming from the Swagger spec. If what you find contradicts the documented contract, classify it as a real defect (a `test.fail()` regression test, logged under "Bugs Found") or a design observation (documented but not asserted as broken) — see those sections above for examples of both.
 
 First decide which layer it belongs in: a new endpoint, error code or edge case goes in `tests/integration/<resource>/`; a new realistic multi-step business scenario goes in `tests/e2e/` (and should stay one of only a few). Cross-cutting checks that aren't about one endpoint's happy/error path go elsewhere: undocumented/edge behaviour → `tests/integration/contract/` (e.g. unexpected fields, idempotency); HTTP-framing errors that apply regardless of endpoint (malformed JSON, wrong `Content-Type`) → `tests/integration/errors/`; auth failures → `tests/integration/auth.spec.ts`.
 
 Add a new `*.spec.ts` file under the relevant folder, importing shared code via the `@fixtures` / `@api/*` / `@utils/*` / `@config/*` aliases, not relative paths. Get a client from the `@fixtures` test (e.g. `claimsClient`) rather than the raw `request` fixture. If a new resource is introduced, add a new `api/clients/*Client.ts` (extending `BaseApiClient`) and matching types under `api/types/`, following the `ClaimsClient` pattern.
+
+## Notes
+
+AI assistance was used for well-structured documentation, for scaffolding the API clients, and for writing up test cases found through exploratory testing (Postman) against the live API.
