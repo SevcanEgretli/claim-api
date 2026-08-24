@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "paths": {
+      "@fixtures": ["./fixtures.ts"],
+      "@config/*": ["./config/*"],
+      "@utils/*": ["./utils/*"],
+      "@api/*": ["./api/*"]
+    }
+  },
+  "include": ["config", "tests", "utils", "api", "playwright.config.ts", "fixtures.ts"]
+}

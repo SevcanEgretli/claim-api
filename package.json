@@ -1,0 +1,36 @@
+{
+  "name": "claim-service-api",
+  "version": "1.0.0",
+  "description": "Automated API test suite for the Claim Service API, using Playwright + TypeScript",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "npx playwright test",
+    "test:bugs": "npx playwright test --grep \"BUG:\"",
+    "test:passing": "npx playwright test --grep-invert \"BUG:\"",
+    "test:headed-debug": "npx playwright test --debug",
+    "test:report": "npx playwright show-report"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@faker-js/faker": "^10.6.0",
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.20.1",
+    "eslint": "^10.9.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-playwright": "^2.11.0",
+    "prettier": "^3.9.6",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.67.0"
+  }
+}
