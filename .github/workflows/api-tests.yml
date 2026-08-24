@@ -44,3 +44,19 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
+
+  docker:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t claim-service-api-tests .
+
+      - name: Run API tests in Docker
+        run: |
+          docker run --rm \
+            -e API_BASE_URL="${{ vars.API_BASE_URL }}" \
+            -e API_KEY="${{ secrets.CLAIM_API_KEY }}" \
+            claim-service-api-tests

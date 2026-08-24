@@ -13,7 +13,8 @@ Every assertion is grounded in the live API's actual behavior, confirmed by dire
 
 ```
 claim-service-api/
-├── .github/workflows/api-tests.yml   # CI workflow (push/manual/daily)
+├── .github/workflows/api-tests.yml   # CI workflow (push/manual/daily), incl. a Docker-based job
+├── Dockerfile                        # runs the suite on Playwright's official image
 ├── docs/
 │   ├── API_UNDERSTANDING.md          # API structure, endpoints, assumptions
 │   └── TEST_CASES.md                 # enumerated list of all 44 test cases
@@ -65,6 +66,15 @@ npm run test:report    # open the latest HTML report
 **Code quality.** `npm run typecheck` (TypeScript), `npm run lint` (ESLint, with `eslint-plugin-playwright` for test-specific rules — `npm run lint:fix` for autofixable issues) and `npm run format:check` (Prettier — `npm run format` to apply) all run in CI on every push and must pass clean.
 
 **CI setup.** `.github/workflows/api-tests.yml` runs on every push to `main`, every pull request into `main`, daily on a schedule, and on manual dispatch. It needs two things configured in the repo (Settings → Secrets and variables → Actions): a repository **variable** named `API_BASE_URL` (the same value as your local `.env`) and a repository **secret** named `CLAIM_API_KEY` (the API key — kept as a secret rather than a variable since it's sensitive, unlike the base URL). Without these the workflow will fail at the "Run API tests" step with the same missing-env-var error `config/env.ts` throws locally.
+
+**Run in Docker.** `Dockerfile` builds on [Playwright's official image](https://mcr.microsoft.com/en-us/product/playwright/about), matching the `@playwright/test` version in `package.json`, so the suite runs the same way regardless of what's installed locally. Credentials still come from the environment, not the image:
+
+```bash
+docker build -t claim-service-api-tests .
+docker run --rm --env-file .env claim-service-api-tests
+```
+
+CI runs this same image in a separate `docker` job in `.github/workflows/api-tests.yml`, alongside the native `test` job.
 
 ## Test Strategy
 
