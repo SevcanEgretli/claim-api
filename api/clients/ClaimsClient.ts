@@ -24,6 +24,11 @@ export class ClaimsClient extends BaseApiClient {
     return this.patch(`/v1/claims/${id}`, payload);
   }
 
+  /** Escape hatch for negative tests that need to send a body outside UpdateClaimRequest's typed shape (e.g. an invalid status enum value). */
+  updateClaimRaw(id: string, body: unknown): Promise<APIResponse> {
+    return this.patch(`/v1/claims/${id}`, body);
+  }
+
   deleteClaim(id: string): Promise<APIResponse> {
     return this.delete(`/v1/claims/${id}`);
   }

@@ -54,4 +54,17 @@ test.describe('PATCH /v1/claims/{id} - known bugs', () => {
 
     expect(refetched.updatedAt).not.toBe(refetched.createdAt);
   });
+
+  // Same class of bug as "required-field validation" above, but for the status enum: PATCH has no
+  // enum validation either. A value outside ClaimStatusSchema ("NOT_A_STATUS") should be rejected
+  // with a 400, the same way an unknown enum value is rejected elsewhere in the API's contract.
+  test('BUG: an invalid status enum value is accepted instead of rejected', async ({ claimsClient }) => {
+    test.fail();
+
+    const created: Claim = await (await claimsClient.createClaim(validCreateClaimPayload())).json();
+
+    const response = await claimsClient.updateClaimRaw(created.id, { status: 'NOT_A_STATUS' });
+
+    expect(response.status()).toBe(400);
+  });
 });

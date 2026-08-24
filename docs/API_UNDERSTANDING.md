@@ -8,15 +8,15 @@ Every request requires a `Bearer` token in the `Authorization` header. A missing
 
 ## Resource: Claim
 
-| Field         | Type                                                                                              | Notes                                                                   |
-| ------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `id`          | `string`                                                                                          | server-generated                                                        |
-| `title`       | `string`                                                                                          | required on create; no documented or enforced max length                |
-| `description` | `string`                                                                                          | required on create; no documented or enforced max length                |
-| `status`      | `enum`: `CLAIM_STATUS_UNSPECIFIED` \| `_PENDING` \| `_UNDER_REVIEW` \| `_APPROVED` \| `_REJECTED` | in practice only `_APPROVED` is reachable — see README bug 1            |
-| `claimantId`  | `string`                                                                                          | no documented or enforced format                                        |
-| `createdAt`   | `string` (RFC3339)                                                                                | nanosecond precision on `POST`, millisecond on `GET` — see README bug 9 |
-| `updatedAt`   | `string` (RFC3339)                                                                                | does not change on `PATCH` — see README bug 4                           |
+| Field         | Type                                                                                              | Notes                                                                    |
+| ------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `id`          | `string`                                                                                          | server-generated                                                         |
+| `title`       | `string`                                                                                          | required on create; no documented or enforced max length                 |
+| `description` | `string`                                                                                          | required on create; no documented or enforced max length                 |
+| `status`      | `enum`: `CLAIM_STATUS_UNSPECIFIED` \| `_PENDING` \| `_UNDER_REVIEW` \| `_APPROVED` \| `_REJECTED` | in practice only `_APPROVED` is reachable — see README bug 1             |
+| `claimantId`  | `string`                                                                                          | no documented or enforced format                                         |
+| `createdAt`   | `string` (RFC3339)                                                                                | nanosecond precision on `POST`, millisecond on `GET` — see README bug 10 |
+| `updatedAt`   | `string` (RFC3339)                                                                                | does not change on `PATCH` — see README bug 4                            |
 
 Full runtime schema: `api/types/claim.types.ts` (`ClaimSchema`, validated with zod at test time, not just cast at compile time).
 
