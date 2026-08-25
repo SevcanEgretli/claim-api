@@ -9,6 +9,52 @@ Every assertion is based on the live API's real behavior, checked by hand before
 - **API structure, endpoints, and assumptions:** [docs/API_UNDERSTANDING.md](docs/API_UNDERSTANDING.md)
 - **Full enumerated test case list:** [docs/TEST_CASES.md](docs/TEST_CASES.md)
 
+## Setup
+
+**Install (one command):**
+
+```bash
+npm install
+```
+
+**Configure your environment:**
+
+```bash
+cp .env.example .env   # fill in your API_KEY
+```
+
+`.env.example` is the committed template with the required variables (`API_BASE_URL`, `API_KEY`). `.env` is your local copy with real values, and it's git-ignored (see `.gitignore`), so it never gets committed or shared. The API key is never hardcoded: `config/env.ts` reads both variables from `.env` and throws a clear error naming the missing one, pointing back at `.env.example`. The Playwright config attaches the key as a Bearer token to every request automatically.
+
+**Run the tests:**
+
+```bash
+npx playwright test
+npm run test:report    # open the latest HTML report
+```
+
+**Run the linter (and other code-quality checks):**
+
+```bash
+npm run lint            # ESLint — npm run lint:fix for autofixable issues
+npm run typecheck       # TypeScript
+npm run format:check    # Prettier — npm run format to apply
+```
+
+All three run in CI on every push and must pass clean.
+
+**CI setup.** `.github/workflows/api-tests.yml` runs on every push to `main`, every pull request into `main`, daily on a schedule, and on manual dispatch. It needs two things set in the repo (Settings → Secrets and variables → Actions): a repository **variable** named `API_BASE_URL` (same value as your local `.env`) and a repository **secret** named `CLAIM_API_KEY` (kept as a secret, not a variable, since it's sensitive). Without these, the workflow fails at the "Run API tests" step with the same missing-env-var error `config/env.ts` throws locally.
+
+**Job summary, no artifact download needed.** The full HTML report is still uploaded as an artifact for deep-diving a failure, but a pass/fail/known-bug breakdown is also written straight to the GitHub Actions run's job summary (`scripts/write-ci-summary.mjs`, reading the `json` reporter's `playwright-report/results.json`) — so a reviewer sees the state of the suite on the Actions run page itself, without downloading anything.
+
+**Run in Docker.** `Dockerfile` builds on [Playwright's official image](https://mcr.microsoft.com/en-us/product/playwright/about), matching the `@playwright/test` version in `package.json`, so the suite runs the same way no matter what's installed locally. Credentials still come from the environment, not the image:
+
+```bash
+docker build -t claim-service-api-tests .
+docker run --rm --env-file .env claim-service-api-tests
+```
+
+CI runs this same image in a separate `docker` job in `.github/workflows/api-tests.yml`, next to the native `test` job.
+
 ## Demo
 
 A recording of a full test run and its Playwright HTML report (`npm run test:report`) — 45 tests, all passing.
@@ -59,52 +105,6 @@ claim-service-api/
 ```
 
 See [CONTRIBUTING.md § Conventions](CONTRIBUTING.md#conventions) for the rules behind this layout (typed API clients, the integration/e2e split, path aliases).
-
-## Setup
-
-**Install (one command):**
-
-```bash
-npm install
-```
-
-**Configure your environment:**
-
-```bash
-cp .env.example .env   # fill in your API_KEY
-```
-
-`.env.example` is the committed template with the required variables (`API_BASE_URL`, `API_KEY`). `.env` is your local copy with real values, and it's git-ignored (see `.gitignore`), so it never gets committed or shared. The API key is never hardcoded: `config/env.ts` reads both variables from `.env` and throws a clear error naming the missing one, pointing back at `.env.example`. The Playwright config attaches the key as a Bearer token to every request automatically.
-
-**Run the tests:**
-
-```bash
-npx playwright test
-npm run test:report    # open the latest HTML report
-```
-
-**Run the linter (and other code-quality checks):**
-
-```bash
-npm run lint            # ESLint — npm run lint:fix for autofixable issues
-npm run typecheck       # TypeScript
-npm run format:check    # Prettier — npm run format to apply
-```
-
-All three run in CI on every push and must pass clean.
-
-**CI setup.** `.github/workflows/api-tests.yml` runs on every push to `main`, every pull request into `main`, daily on a schedule, and on manual dispatch. It needs two things set in the repo (Settings → Secrets and variables → Actions): a repository **variable** named `API_BASE_URL` (same value as your local `.env`) and a repository **secret** named `CLAIM_API_KEY` (kept as a secret, not a variable, since it's sensitive). Without these, the workflow fails at the "Run API tests" step with the same missing-env-var error `config/env.ts` throws locally.
-
-**Job summary, no artifact download needed.** The full HTML report is still uploaded as an artifact for deep-diving a failure, but a pass/fail/known-bug breakdown is also written straight to the GitHub Actions run's job summary (`scripts/write-ci-summary.mjs`, reading the `json` reporter's `playwright-report/results.json`) — so a reviewer sees the state of the suite on the Actions run page itself, without downloading anything.
-
-**Run in Docker.** `Dockerfile` builds on [Playwright's official image](https://mcr.microsoft.com/en-us/product/playwright/about), matching the `@playwright/test` version in `package.json`, so the suite runs the same way no matter what's installed locally. Credentials still come from the environment, not the image:
-
-```bash
-docker build -t claim-service-api-tests .
-docker run --rm --env-file .env claim-service-api-tests
-```
-
-CI runs this same image in a separate `docker` job in `.github/workflows/api-tests.yml`, next to the native `test` job.
 
 ## Test Strategy
 
