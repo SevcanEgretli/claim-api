@@ -11,7 +11,7 @@ Every assertion is based on the live API's real behavior, checked by hand before
 
 ## Demo
 
-A recording of a full test run and its Playwright HTML report (`npm run test:report`) — 44 tests, all passing.
+A recording of a full test run and its Playwright HTML report (`npm run test:report`) — 45 tests, all passing.
 
 ▶️ [Watch the demo recording](docs/demo.mov)
 
