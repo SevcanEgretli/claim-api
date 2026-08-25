@@ -13,7 +13,7 @@ Every assertion is based on the live API's real behavior, checked by hand before
 
 A recording of a full test run and its Playwright HTML report (`npm run test:report`) — 45 tests, all passing.
 
-▶️ [Watch the demo recording](docs/demo.mov)
+▶️ [Watch the demo recording](docs/claim-api-demo.mov)
 
 ![Playwright HTML report — 45 tests, all passing](docs/images/report-summary.png)
 
@@ -27,7 +27,7 @@ claim-service-api/
 ├── docs/
 │   ├── API_UNDERSTANDING.md          # API structure, endpoints, assumptions
 │   ├── TEST_CASES.md                 # enumerated list of all 45 test cases
-│   └── demo.mov                      # test run + report recording (see "Demo" above)
+│   └── claim-api-demo.mov            # test run + report recording (see "Demo" above)
 ├── config/
 │   └── env.ts                        # reads base URL + API key from .env
 ├── api/
