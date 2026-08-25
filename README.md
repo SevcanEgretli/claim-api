@@ -15,6 +15,8 @@ A recording of a full test run and its Playwright HTML report (`npm run test:rep
 
 ▶️ [Watch the demo recording](docs/demo.mov)
 
+![Playwright HTML report — 45 tests, all passing](docs/images/report-summary.png)
+
 ## Project Structure
 
 ```
@@ -24,7 +26,7 @@ claim-service-api/
 ├── CONTRIBUTING.md                   # how to add a new test
 ├── docs/
 │   ├── API_UNDERSTANDING.md          # API structure, endpoints, assumptions
-│   ├── TEST_CASES.md                 # enumerated list of all 44 test cases
+│   ├── TEST_CASES.md                 # enumerated list of all 45 test cases
 │   └── demo.mov                      # test run + report recording (see "Demo" above)
 ├── config/
 │   └── env.ts                        # reads base URL + API key from .env
@@ -56,11 +58,7 @@ claim-service-api/
 └── tsconfig.json
 ```
 
-**API clients are required.** Tests never call `request.get/post/...` directly — always through a typed client under `api/clients/`, one class per resource. This is a strict rule, not just a habit: it keeps every request typed, keeps endpoint knowledge in one place, and makes adding a new resource simple — just one more client and spec folder, no new pattern to invent.
-
-**Two layers, on purpose.** `tests/integration/` holds most of the suite: many small tests, each pinned to one endpoint's behaviour. `tests/e2e/` stays small: a handful of tests that each walk through one full, realistic flow.
-
-**Path aliases.** Shared code is imported via `@fixtures`, `@api/*`, `@utils/*`, and `@config/*` (set up in `tsconfig.json`'s `paths`, resolved natively by Playwright) instead of relative paths like `../../../api/clients/ClaimsClient`.
+See [CONTRIBUTING.md § Conventions](CONTRIBUTING.md#conventions) for the rules behind this layout (typed API clients, the integration/e2e split, path aliases).
 
 ## Setup
 
